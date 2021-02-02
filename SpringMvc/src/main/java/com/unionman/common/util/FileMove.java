@@ -14,6 +14,7 @@ import java.util.Objects;
 import org.apache.commons.io.FileUtils;
 
 import com.drew.imaging.ImageMetadataReader;
+import com.drew.lang.DateUtil;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 
@@ -31,41 +32,63 @@ public class FileMove {
     public static void copy(File sourceF, File targetF) throws Exception {
         FileUtils.forceMkdir(targetF);
         File[] target_file = sourceF.listFiles();
+        
         for (File file : target_file) {
-            String monthStr = getFileCreateDate(file, "yyyyMM");
-            File temp = new File(targetF.getAbsolutePath() + File.separator 
-                    + monthStr + File.separator + file.getName());
             if (file.isDirectory()) {
 //                temp.mkdir();
 //                copy(file, temp);
             } else {
-                getDescription(file);
-                FileUtils.forceMkdir(new File(targetF + "/" + monthStr));
-                FileInputStream fis = null;
-                FileOutputStream fos = null;
-                try {
-                    fis = new FileInputStream(file);
-                    fos = new FileOutputStream(temp);
-                    byte[] b = new byte[4096];
-                    int cnt = 0;
-                    while ((cnt = fis.read(b)) != -1) {
-                        fos.write(b, 0, cnt);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        fis.close();
-                        fos.close();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
+                String monthStr = getDatePattern(getImageOriginalDate(file), "yyyyMM");
+                System.out.println(file.getName());
+                System.out.println(
+                        FileUtils.getFile(targetF.getAbsolutePath() + File.separator 
+                                + monthStr + File.separator + file.getName()).isFile()
+                        );
+//            String monthStr = getFileCreateDate(file, "yyyyMM");
+                File temp = new File(targetF.getAbsolutePath() + File.separator 
+                        + monthStr + File.separator + file.getName());
 
-                }
+                //                getDescription(file);
+                FileUtils.forceMkdir(new File(targetF + "/" + monthStr));
+                
+                FileUtils.moveFile(file, temp);
+//                FileInputStream fis = null;
+//                FileOutputStream fos = null;
+//                try {
+//                    fis = new FileInputStream(file);
+//                    fos = new FileOutputStream(temp);
+//                    byte[] b = new byte[4096];
+//                    int cnt = 0;
+//                    while ((cnt = fis.read(b)) != -1) {
+//                        fos.write(b, 0, cnt);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    try {
+//                        fis.close();
+//                        fos.close();
+//                    } catch (IOException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    }
+//
+//                }
             }
         }
     }
+    
+    public static String getDatePattern(Date date, String pattern) {
+        String formatted = null;
+        if(pattern == null && Objects.equals(pattern, "")) {
+            pattern = "yyyy-MM-dd HH:mm:ss";
+        }
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        formatted = simpleDateFormat.format( date );
+        return formatted;
+
+    }
+    
     public static String getFileCreateDate(File file, String pattern) {
         
         BasicFileAttributes attrs;
@@ -91,7 +114,7 @@ public class FileMove {
 
     
     
-    private static String getDescription(File file) throws Exception {
+    private static Date getImageOriginalDate(File file) throws Exception {
         Metadata metadata = ImageMetadataReader.readMetadata(file);
         
 //        for (Directory directory : metadata.getDirectories()) {
@@ -116,7 +139,7 @@ public class FileMove {
         System.out.println(originalDate);
         System.out.println(modelName);
 
-            return "";
+            return originalDate;
     }
 
 
